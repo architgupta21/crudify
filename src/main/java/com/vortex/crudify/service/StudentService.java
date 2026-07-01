@@ -2,7 +2,6 @@ package com.vortex.crudify.service;
 
 import com.vortex.crudify.entity.Student;
 import com.vortex.crudify.repository.StudentRepository;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -17,23 +16,24 @@ public class StudentService {
     }
 
     public Student createStudent(Student studentReq) {
+        studentReq.setDeleted(false);
         Student studentResp = studentRepository.save(studentReq);
         return studentResp;
     }
 
     public Student getStudent(Long id) {
-        Optional<Student> studentResp = studentRepository.findById(id);
+        Optional<Student> studentResp = studentRepository.findByIdAndDeletedIsFalse(id);
         if(studentResp.isPresent()) return studentResp.get();
         return null;
     }
 
     public List<Student> getAllStudent() {
-        List<Student> studentList = studentRepository.findAll();
+        List<Student> studentList = studentRepository.findByAndDeletedIsFalse();
         return studentList;
     }
 
     public Student updateStudent(Long id, Student studentReq) {
-        Optional<Student> existingStudent = studentRepository.findById(id);
+        Optional<Student> existingStudent = studentRepository.findByIdAndDeletedIsFalse(id);
         if(existingStudent.isEmpty()) return null;
 
         Student studentToSave =  existingStudent.get();
@@ -52,5 +52,15 @@ public class StudentService {
 
         studentRepository.deleteById(id);
         return true;
+    }
+
+    public Boolean deleteStudentSoftly(Long id) {
+        Optional<Student> existingStudent = studentRepository.findByIdAndDeletedIsFalse(id);
+        if(existingStudent.isEmpty()) return false;
+        Student studentToSave = existingStudent.get();
+        studentToSave.setDeleted(true);
+        studentRepository.save(studentToSave);
+        return true;
+
     }
 }
